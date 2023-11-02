@@ -16,8 +16,8 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     const user = await this.authService.validateUser(username, password);
     if (!user) {
       throw new UnauthorizedException({
-        code: '401',
-        message: '用户名或密码错误',
+        statusCode: '401',
+        message: '用户不存在或密码错误',
       });
     }
     return user;

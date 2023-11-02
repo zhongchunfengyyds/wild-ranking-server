@@ -1,6 +1,7 @@
 import { Injectable, Dependencies } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import * as md5 from 'md5';
 
 @Dependencies(UsersService, JwtService)
 @Injectable()
@@ -12,9 +13,9 @@ export class AuthService {
     this.jwtService = jwtService;
   }
 
-  async validateUser(username, pass) {
-    const user = await this.usersService.findOne(username);
-    if (user && user.password === pass) {
+  async validateUser(email, pass) {
+    const user = await this.usersService.findOneByEmail(email);
+    if (user && md5(pass) === user.password) {
       const { password, ...result } = user;
       return result;
     }
@@ -22,7 +23,8 @@ export class AuthService {
   }
 
   async login(user) {
-    const payload = { username: user.username, sub: user.userId };
+    const userDetail = await this.usersService.findOneByEmail(user.email);
+    const payload = { email: userDetail.email, id: userDetail.id };
     return {
       access_token: this.jwtService.sign(payload),
     };

@@ -1,24 +1,46 @@
-import { Injectable } from '@nestjs/common';
-
+import { Injectable, Dependencies } from '@nestjs/common';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from './user.entity';
+import { Repository } from 'typeorm';
+import { CreateCatDto } from './user.dto';
+import * as md5 from 'md5';
 @Injectable()
+@Dependencies(getRepositoryToken(User))
 export class UsersService {
-  users;
-  constructor() {
-    this.users = [
-      {
-        userId: 1,
-        username: 'john',
-        password: 'changeme',
-      },
-      {
-        userId: 2,
-        username: 'maria',
-        password: 'guess',
-      },
-    ];
+  private readonly usersRepository: Repository<User>;
+  constructor(usersRepository) {
+    this.usersRepository = usersRepository;
   }
 
-  async findOne(username) {
-    return this.users.find((user) => user.username === username);
+  findAll() {
+    return this.usersRepository.find();
+  }
+
+  findOneById(id) {
+    return this.usersRepository.findOneBy({ id });
+  }
+  findOneByEmail(email) {
+    return this.usersRepository.findOneBy({ email });
+  }
+
+  async create(user: CreateCatDto) {
+    const have = await this.findOneByEmail(user.email);
+    if (have) {
+      return {
+        statusCode: '400',
+        message: '用户已存在',
+      };
+    } else {
+      user.password = md5(user.password);
+      this.usersRepository.save(user);
+      return {
+        statusCode: '200',
+        message: '注册成功',
+      };
+    }
+  }
+
+  async remove(id) {
+    await this.usersRepository.delete(id);
   }
 }
