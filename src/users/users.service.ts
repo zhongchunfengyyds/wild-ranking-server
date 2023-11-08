@@ -2,15 +2,12 @@ import { Injectable, Dependencies } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository } from 'typeorm';
-import { CreateCatDto } from './user.dto';
+import { RegisterUserDto } from './user.dto';
 import * as md5 from 'md5';
 @Injectable()
 @Dependencies(getRepositoryToken(User))
 export class UsersService {
-  private readonly usersRepository: Repository<User>;
-  constructor(usersRepository) {
-    this.usersRepository = usersRepository;
-  }
+  constructor(private readonly usersRepository: Repository<User>) {}
 
   findAll() {
     return this.usersRepository.find();
@@ -23,7 +20,7 @@ export class UsersService {
     return this.usersRepository.findOneBy({ email });
   }
 
-  async create(user: CreateCatDto) {
+  async create(user: RegisterUserDto) {
     const have = await this.findOneByEmail(user.email);
     if (have) {
       return {
